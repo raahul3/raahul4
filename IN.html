@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interactive Resume Chatbot - Monochrome PDF Fix</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    /* Global Reset & Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #fff;
+      color: #000;
+    }
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+    /* Chat Section (Left) */
+    .chat-section {
+      width: 35%;
+      max-width: 400px;
+      background: #f8f8f8;
+      border-right: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-header {
+      background: #000;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #fff;
+    }
+    .chat-input {
+      display: flex;
+      padding: 15px;
+      border-top: 1px solid #ccc;
+      background: #f0f0f0;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 12px 15px;
+      border: 1px solid #ccc;
+      border-radius: 25px;
+      outline: none;
+      font-size: 16px;
+      background: #fff;
+    }
+    .chat-input button {
+      background: #000;
+      border: none;
+      color: #fff;
+      padding: 0 18px;
+      margin-left: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      transition: background 0.3s;
+    }
+    .chat-input button:hover {
+      background: #333;
+    }
+    .message {
+      max-width: 80%;
+      margin-bottom: 15px;
+      padding: 12px 18px;
+      border-radius: 25px;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+    .message.bot {
+      background: #e8e8e8;
+      border: 1px solid #ccc;
+    }
+    .message.user {
+      background: #d0d0d0;
+      border: 1px solid #bbb;
+      align-self: flex-end;
+    }
+    /* Resume Preview (Right) */
+    .resume-section {
+      flex: 1;
+      padding: 30px 40px;
+      overflow-y: auto;
+    }
+    .resume-header {
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #000;
+    }
+    .resume-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .contact-info {
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .contact-info span {
+      margin-right: 12px;
+    }
+    .section {
+      margin-bottom: 25px;
+    }
+    .section h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #000;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .section p {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-top: 8px;
+      white-space: pre-wrap;
+    }
+    .skills span {
+      display: inline-block;
+      background: #e8e8e8;
+      color: #000;
+      padding: 7px 12px;
+      margin: 5px 6px 0 0;
+      border-radius: 20px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .download-btn {
+      display: block;
+      width: 220px;
+      text-align: center;
+      margin: 30px auto 0 auto;
+      padding: 12px;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .download-btn:hover {
+      background: #333;
+    }
+    /* Print Styles */
+    @media print {
+      /* Remove chat section */
+      .chat-section { display: none !important; }
+      /* Ensure full width & remove constraints on resume content */
+      .resume-section {
+        width: 100% !important;
+        padding: 20px !important;
+        overflow: visible !important;
+      }
+      /* Force header display and remove potential margin issues */
+      .resume-header {
+        display: block !important;
+        position: relative !important;
+        top: 0;
+        left: 0;
+        width: 100%;
+        margin: 0 0 20px 0 !important;
+        padding: 20px !important;
+        border-bottom: 2px solid #000 !important;
+      }
+      /* Reset body margins for printing */
+      body, html { margin: 0; padding: 0; }
+      /* Prevent section breaks inside content */
+      .section { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Chat Interface -->
+    <div class="chat-section">
+      <div class="chat-header">Resume Chatbot</div>
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Type your answer..." />
+        <button id="sendButton">➤</button>
+      </div>
+    </div>
+    <!-- Resume Preview -->
+    <div class="resume-section" id="resumePreview">
+      <div class="resume-header">
+        <h1 id="resumeFullName">Your Full Name</h1>
+        <div class="contact-info" id="resumeContact">
+          <span id="resumePhone">Phone Number</span> |
+          <span id="resumeEmail">Email Address</span> |
+          <span id="resumeLinkedin">LinkedIn</span> |
+          <span id="resumeAddress">Address</span>
+        </div>
+      </div>
+      <div class="section">
+        <h2>Career Objective</h2>
+        <p id="resumeCareer">Your career objective will appear here.</p>
+      </div>
+      <div class="section">
+        <h2>Education</h2>
+        <p id="resumeEducation">Your education details will appear here.</p>
+      </div>
+      <div class="section">
+        <h2>Skills</h2>
+        <div class="skills" id="resumeSkills">Your skills will appear here.</div>
+      </div>
+      <div class="section">
+        <h2>Work Experience</h2>
+        <p id="resumeExperience">Your work experience details will appear here.</p>
+      </div>
+      <div class="section">
+        <h2>Projects</h2>
+        <p id="resumeProjects">Your project details will appear here.</p>
+      </div>
+      <div class="section">
+        <h2>Certifications & Training</h2>
+        <p id="resumeCertifications">Your certifications/training details will appear here.</p>
+      </div>
+      <div class="section">
+        <h2>Extracurricular Activities</h2>
+        <p id="resumeExtracurricular">Your extracurricular details will appear here.</p>
+      </div>
+      <div class="section">
+        <h2>Hobbies & Interests</h2>
+        <p id="resumeHobbies">Your hobbies and interests will appear here.</p>
+      </div>
+      <div class="section">
+        <h2>References</h2>
+        <p id="resumeReferences">References: Available upon request.</p>
+      </div>
+      <button class="download-btn" onclick="printResume()">Print/Save PDF</button>
+    </div>
+  </div>
+  <script>
+    // Define the questions in order
+    const questions = [
+      { key: 'fullName', question: "What's your full name?" },
+      { key: 'phone', question: "What's your phone number?" },
+      { key: 'email', question: "What's your email address?" },
+      { key: 'linkedin', question: "What's your LinkedIn profile URL (if applicable)?" },
+      { key: 'address', question: "What's your address? (optional)" },
+      { key: 'careerObjective', question: "Enter your career objective:" },
+      { key: 'education', question: "Provide your education details (Degree, Institution, Location, Graduation Date, achievements):" },
+      { key: 'skills', question: "List your skills (separated by commas):" },
+      { key: 'experience', question: "Describe your work experience (Job title, Company, Location, Dates, responsibilities):" },
+      { key: 'projects', question: "Share details of your projects (description, your role, outcome):" },
+      { key: 'certifications', question: "List any certifications or training you have completed:" },
+      { key: 'extracurricular', question: "Describe your extracurricular activities (clubs, volunteer work, leadership roles):" },
+      { key: 'hobbies', question: "List your hobbies & interests (optional):" },
+      { key: 'references', question: "Enter your references (or type 'Available upon request'):" }
+    ];
+    // Object to store resume data
+    const resumeData = {
+      fullName: '',
+      phone: '',
+      email: '',
+      linkedin: '',
+      address: '',
+      careerObjective: '',
+      education: '',
+      skills: '',
+      experience: '',
+      projects: '',
+      certifications: '',
+      extracurricular: '',
+      hobbies: '',
+      references: ''
+    };
+    let currentStep = 0;
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendButton = document.getElementById('sendButton');
+    // Append a chat message to the chat window
+    function appendMessage(sender, text) {
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('message', sender);
+      msgDiv.textContent = text;
+      chatMessages.appendChild(msgDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    // Ask the next question in the chat flow
+    function askQuestion() {
+      if (currentStep < questions.length) {
+        appendMessage('bot', questions[currentStep].question);
+      } else {
+        appendMessage('bot', "All set! Your resume is now ready.");
+      }
+    }
+    // Update the resume preview with collected data
+    function updateResume() {
+      document.getElementById('resumeFullName').textContent = resumeData.fullName || "Your Full Name";
+      document.getElementById('resumePhone').textContent = resumeData.phone || "Phone Number";
+      document.getElementById('resumeEmail').textContent = resumeData.email || "Email Address";
+      document.getElementById('resumeLinkedin').textContent = resumeData.linkedin || "LinkedIn";
+      document.getElementById('resumeAddress').textContent = resumeData.address || "Address";
+      document.getElementById('resumeCareer').textContent = resumeData.careerObjective || "Your career objective will appear here.";
+      document.getElementById('resumeEducation').textContent = resumeData.education || "Your education details will appear here.";
+      if (resumeData.skills) {
+        const skillsArray = resumeData.skills.split(',');
+        document.getElementById('resumeSkills').innerHTML = skillsArray.map(skill => `<span>${skill.trim()}</span>`).join(' ');
+      } else {
+        document.getElementById('resumeSkills').textContent = "Your skills will appear here.";
+      }
+      document.getElementById('resumeExperience').textContent = resumeData.experience || "Your work experience details will appear here.";
+      document.getElementById('resumeProjects').textContent = resumeData.projects || "Your project details will appear here.";
+      document.getElementById('resumeCertifications').textContent = resumeData.certifications || "Your certifications/training details will appear here.";
+      document.getElementById('resumeExtracurricular').textContent = resumeData.extracurricular || "Your extracurricular details will appear here.";
+      document.getElementById('resumeHobbies').textContent = resumeData.hobbies || "Your hobbies and interests will appear here.";
+      document.getElementById('resumeReferences').textContent = resumeData.references || "References: Available upon request.";
+    }
+    // Handle sending an answer
+    function handleSend() {
+      const inputText = chatInput.value.trim();
+      if (!inputText) return;
+      appendMessage('user', inputText);
+      const key = questions[currentStep].key;
+      resumeData[key] = inputText;
+      updateResume();
+      chatInput.value = "";
+      currentStep++;
+      if (currentStep < questions.length) {
+        setTimeout(askQuestion, 500);
+      } else {
+        setTimeout(() => appendMessage('bot', "All set! Your resume is ready."), 500);
+      }
+    }
+    sendButton.addEventListener('click', handleSend);
+    chatInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleSend();
+      }
+    });
+    function printResume() {
+      window.print();
+    }
+    window.onload = function() {
+      askQuestion();
+    };
+  </script>
+</body>
+</html>
